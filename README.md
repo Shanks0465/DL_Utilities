@@ -1,2 +1,2 @@
 # DL_Utilities
-Compilation of File and Visualization Functions for Deep Learning
+Compilation of File and Image Functions for Deep Learning

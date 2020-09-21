@@ -1,4 +1,65 @@
 import imutils
+from matplotlib import image
+from skimage.transform import resize, rescale
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+from skimage import img_as_ubyte
+import random
+
+def shuffle(samples):
+    shuffled=random.sample(samples, len(samples))
+    return shuffled
+
+def hr_lr_generator(samples,path,batch_size=10):
+    num_samples = len(samples)
+    while True:
+        shuffle(samples)
+        for offset in range(0, num_samples, batch_size):
+            batch_samples = samples[offset:offset+batch_size]
+            X_train = []
+            y_train = []
+            for sample_file in batch_samples:
+                img_data = image.imread(path+sample_file)
+                image_resized = resize(img_data, (256, 256))
+                output = cv2.resize(image_resized, dsize)
+                lr=cv2.resize(output, (256,256))
+                X_train.append(img_as_ubyte(lr))
+                y_train.append(img_as_ubyte(image_resized))
+            X_train = np.array(X_train)
+            y_train = np.array(y_train)
+            yield X_train, y_train
+
+def create_mask(img):
+  mask = np.full((256,256,3), 0, np.uint8)
+  for _ in range(np.random.randint(1, 10)):
+    x1, x2 = np.random.randint(1, 256), np.random.randint(1, 256)
+    y1, y2 = np.random.randint(1, 256), np.random.randint(1, 256)
+    thickness = 7
+    cv2.line(mask,(x1,y1),(x2,y2),(255,255,255),thickness)
+  masked_image = img.copy()
+  image_resized = resize(masked_image, (256, 256))
+  return img_as_ubyte(image_resized), mask
+
+
+def inpaint_generator(samples,batch_size=10):
+    num_samples = len(samples)
+    while True:
+        shuffle(samples)
+        for offset in range(0, num_samples, batch_size):
+            batch_samples = samples[offset:offset+batch_size]
+            X_train = []
+            y_train = []
+            for sample_file in batch_samples:
+                img_data = image.imread('/content/drive/My Drive/DIV2K_train_HR/'+sample_file)
+                image_resized = resize(img_data, (256, 256))
+                img,mask=create_mask(image_resized)
+                masked=cv2.bitwise_or(img,mask)
+                X_train.append(masked)
+                y_train.append(img)
+            X_train = np.array(X_train)
+            y_train = np.array(y_train)
+            yield X_train, y_train
 
 def get_iou(bb1, bb2):
     assert bb1['x1'] < bb1['x2']
